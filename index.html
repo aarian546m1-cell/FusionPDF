@@ -447,7 +447,91 @@ input[type=checkbox] { accent-color: var(--fp-jade) !important; }
 /* ── Intel header ── */
 .intel-header { background: linear-gradient(135deg, #1a2a20 0%, var(--fp-jade) 100%) !important; }
 
-/* ── User avatar ── */
+/* ── Profile Page Polish ── */
+#page-profile { background: var(--fp-bg) !important; }
+.prf-wrap { opacity: 0; transform: translateY(10px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+#page-profile.show .prf-wrap { opacity: 1; transform: translateY(0); }
+
+@keyframes prf-pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+.prf-syncing { animation: prf-pulse 1.5s infinite ease-in-out; }
+
+.prf-skeleton {
+  background: linear-gradient(90deg, var(--fp-border) 25%, var(--fp-surface) 50%, var(--fp-border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.user-avatar { border-color: var(--fp-jade) !important; color: var(--fp-jade) !important; background: var(--fp-surface) !important; font-weight: 800 !important; }
+
+/* ══ UX OVERHAUL: ANIMATIONS & POLISH ══ */
+
+/* 1. Auth Modal Sliding Animation */
+.auth-body { position: relative; overflow: hidden; min-height: 380px; }
+.auth-form-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+  width: 200%; /* Two tabs side by side */
+}
+.auth-form-pane {
+  width: 50%;
+  padding: 10px 5px;
+  flex-shrink: 0;
+  transition: opacity 0.3s ease;
+}
+.auth-form-pane.inactive { opacity: 0; pointer-events: none; }
+
+/* 2. Loading Spinner */
+@keyframes fp-spin { to { transform: rotate(360deg); } }
+.fp-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: fp-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.btn-loading { pointer-events: none; opacity: 0.8 !important; }
+
+/* 3. Page Transitions */
+@keyframes fp-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-transition { animation: fp-fade-in 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards; }
+
+/* 4. Button & Interaction Polish */
+.btn-solid, .btn-outline, .auth-submit, .hero-btn-primary, .hero-btn-secondary {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+.btn-solid:active, .btn-outline:active, .auth-submit:active { transform: scale(0.96); }
+.btn-solid:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,90,61,0.25) !important; }
+
+/* 5. Input Validation States */
+.form-input.invalid { border-color: #ef4444 !important; background: #fff5f5 !important; }
+.form-input.valid { border-color: var(--fp-jade) !important; }
+
+.auth-error {
+  background: #fef2f2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 500;
+  border-left: 3px solid #ef4444;
+  margin-bottom: 15px;
+  display: none;
+  animation: fp-fade-in 0.3s ease;
+}
+
 .user-avatar { background: var(--fp-jade) !important; }
 
 /* ── Legal / cookie ── */
@@ -4447,12 +4531,48 @@ input[type=checkbox]{accent-color:var(--red);width:13px;height:13px}
         <button class="auth-tab" id="tabSignup" onclick="setAuthMode('signup')">Sign Up</button>
       </div>
 
-      <div class="form-group" id="nameField" style="display:none"><label class="form-label">Full Name</label><input class="form-input" id="authName" type="text" placeholder="Your name"/></div>
-      <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="authEmail" type="email" placeholder="you@example.com"/></div>
-      <div class="form-group"><label class="form-label">Password</label><div class="pass-wrap"><input class="form-input" id="authPass" type="password" placeholder="At least 6 characters" style="padding-right:40px"/><button class="pass-toggle" onclick="togglePassVis()">👁</button></div></div>
+      <div class="auth-form-track" id="authTrack">
+        <!-- Sign In Pane -->
+        <div class="auth-form-pane" id="paneLogin">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" id="authEmail" type="email" placeholder="you@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="pass-wrap">
+              <input class="form-input" id="authPass" type="password" placeholder="At least 6 characters" style="padding-right:40px"/>
+              <button class="pass-toggle" onclick="togglePassVis('authPass')">👁</button>
+            </div>
+          </div>
+          <div class="forgot-link"><a href="#" onclick="doForgot(event)">Forgot your password?</a></div>
+        </div>
+
+        <!-- Sign Up Pane -->
+        <div class="auth-form-pane inactive" id="paneSignup">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" id="authName" type="text" placeholder="Your name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" id="authEmailSignup" type="email" placeholder="you@example.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="pass-wrap">
+              <input class="form-input" id="authPassSignup" type="password" placeholder="Create a password" style="padding-right:40px"/>
+              <button class="pass-toggle" onclick="togglePassVis('authPassSignup')">👁</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="auth-error" id="authErr"></div>
-      <button class="auth-submit" id="authSubmitBtn" onclick="doAuth()">Sign In</button>
-      <div class="forgot-link" id="forgotRow"><a href="#" onclick="doForgot(event)">Forgot your password?</a></div>
+      <button class="auth-submit" id="authSubmitBtn" onclick="doAuth()">
+        <span id="authBtnSpinner"></span>
+        <span id="authBtnText">Sign In</span>
+      </button>
       <div class="auth-footer"><span id="authFooterText">Don't have an account?</span> <a href="#" id="authFooterLink" onclick="toggleAuthMode(event)">Sign up free</a></div>
     </div>
   </div>
@@ -4576,8 +4696,8 @@ const TOOL_RELATED = {
   comparepdf: ['editpdf','mergepdf','splitpdf','repairpdf'],
   pagenumbers:['watermarkpdf','editpdf','rotatepdf','cropdf'],
   repairpdf:  ['compresspdf','pdfa','editpdf','mergepdf'],
-  ocrpdf:     ['scantopdf','pdf2word','translatepdf','editpdf'],
-  signpdf:    ['editpdf','watermarkpdf','protectpdf','pagenumbers'],
+  ocrpdf:      ['scantopdf','pdf2word','translatepdf','editpdf'],
+  signpdf:     ['editpdf','watermarkpdf','protectpdf','pagenumbers'],
   pdfsecurity:['unlockpdf','protectpdf','redactpdf','signpdf'],
 };
 
@@ -4736,13 +4856,12 @@ const _NAV_TAB_INDEX = { ai: 1, cv: 2, intel: 3, sec: 4 };
 
 function _showSitePage(pageId, activeTab) {
   // 1. Hide all site pages
-  document.querySelectorAll('.site-page').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.site-page').forEach(p => p.classList.remove('show', 'page-transition'));
 
   // 2. Show target page
   const target = document.getElementById('page-' + pageId);
   if (target) {
-    target.classList.add('show');
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    target.classList.add('show', 'page-transition');
   }
 
   // 3. Update top-nav active state correctly
@@ -5075,59 +5194,46 @@ const BLOG_POSTS = [
 // ── /profile ──────────────────────────────────────────────────────────
 function _renderProfile() {
   const session = getSession();
-  const loading  = document.getElementById('prfLoading');
-  const content  = document.getElementById('prfContent');
-  const guard    = document.getElementById('prfAuthGuard');
+  const loading = document.getElementById('prfLoading');
+  const content = document.getElementById('prfContent');
+  const guard   = document.getElementById('prfAuthGuard');
+  const hdr     = document.getElementById('profilePageHdrRight');
 
-  // Sync the mini nav header right-side buttons
-  const hdr = document.getElementById('profilePageHdrRight');
-  if (hdr) {
-    const s = getSession();
-    if (s) {
-      const avatarContent = s.avatarUrl
-        ? `<img src="${s.avatarUrl}" alt="${s.name}"/>`
-        : (s.avatar || s.name.charAt(0).toUpperCase());
-      hdr.innerHTML = `<div class="user-chip" id="userChip">
-        <div class="user-chip-inner" onclick="toggleUserDropdown(event)">
-          <div class="user-avatar">${avatarContent}</div>
-          <span class="user-profile-label">My Profile</span>
-        </div>
-        <div class="user-dropdown" id="userDropdown">
-          <div class="user-dropdown-info">
-            <div class="user-dropdown-name">${s.name}</div>
-            <div class="user-dropdown-email">${s.email}</div>
-          </div>
-          <button class="user-dropdown-item danger" onclick="prfConfirmLogout()">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 15l4-5-4-5M17 10H7M10 3H5a1 1 0 00-1 1v12a1 1 0 001 1h5"/></svg>
-            Sign Out
-          </button>
-        </div>
-      </div>`;
-    } else {
-      hdr.innerHTML = '<button class="btn-outline" onclick="openAuth(\'login\')">Login</button>';
-    }
-  }
-
+  // Handle No Session
   if (!session) {
-    loading.style.display = 'none';
-    content.style.display = 'none';
-    guard.style.display   = 'block';
+    if (loading) loading.style.display = 'none';
+    if (content) content.style.display = 'none';
+    if (guard)   guard.style.display   = 'block';
+    if (hdr) hdr.innerHTML = '<button class="btn-solid" onclick="openAuth(\'login\')">Sign In</button>';
     return;
   }
 
-  guard.style.display   = 'none';
-  loading.style.display = 'flex';
-  content.style.display = 'none';
+  // Session exists: Prepare UI Header 
+  if (hdr) {
+    const avatarContent = session.avatarUrl
+      ? `<img src="${session.avatarUrl}" alt="${session.name}"/>`
+      : (session.avatar || session.name.charAt(0).toUpperCase());
+    hdr.innerHTML = `<div class="user-chip"><div class="user-chip-inner" onclick="toggleUserDropdown(event)"><div class="user-avatar">${avatarContent}</div></div></div>`;
+  }
 
-  // Async fetch from Supabase
+  // 1. Instant Fill from Cache (UI loads immediately)
+  if (guard)   guard.style.display   = 'none';
+  if (loading) loading.style.display = 'none'; // No need for hard loading if we have cache
+  if (content) {
+    content.style.display = 'grid';
+    content.classList.add('prf-syncing'); // Subtle pulse while fetching
+  }
+  
+  // Fill what we have from local session
+  prfPopulateForm(session, {});
+
+  // 2. Background Sync (Silent Update)
   prfGetProfile(session.id).then(function(profile) {
-    prfPopulateForm(session, profile || {});
-    loading.style.display = 'none';
-    content.style.display = 'grid';
-  }).catch(function() {
-    prfPopulateForm(session, {});
-    loading.style.display = 'none';
-    content.style.display = 'grid';
+    if (profile) prfPopulateForm(session, profile);
+    if (content) content.classList.remove('prf-syncing');
+  }).catch(function(e) {
+    console.warn("Silent profile sync failed.", e);
+    if (content) content.classList.remove('prf-syncing');
   });
 }
 
@@ -8615,33 +8721,62 @@ eid('authOverlay').addEventListener('click', function(e) { if (e.target === this
 eid('btnLogin').onclick = () => openAuth('login');
 eid('btnSignup').onclick = () => openAuth('signup');
 
+function togglePassVis(id) {
+  const input = eid(id || 'authPass');
+  const btn = input.nextElementSibling;
+  if (input.type === 'password') { 
+    input.type = 'text'; 
+    if (btn) btn.textContent = '🙈'; 
+  } else { 
+    input.type = 'password'; 
+    if (btn) btn.textContent = '👁'; 
+  }
+}
+
 function setAuthMode(mode) {
   authMode = mode;
-  const isLogin = mode === 'login';
-  eid('tabLogin').className = 'auth-tab' + (isLogin ? ' active' : '');
-  eid('tabSignup').className = 'auth-tab' + (!isLogin ? ' active' : '');
-  eid('authHeading').textContent = isLogin ? 'Welcome back' : 'Create account';
-  eid('authSubheading').textContent = isLogin ? 'Sign in to your FusionPDF account' : 'Join FusionPDF — it\'s free!';
-  eid('nameField').style.display = isLogin ? 'none' : 'block';
-  eid('authSubmitBtn').textContent = isLogin ? 'Sign In' : 'Create Account';
-  eid('forgotRow').style.display = isLogin ? 'block' : 'none';
-  const divEl = eid('authOverlay').querySelector('.divider-txt');
-  if (divEl) divEl.textContent = isLogin ? 'or sign in with email' : 'or sign up with email';
-  eid('authFooterText').textContent = isLogin ? "Don't have an account?" : "Already have an account?";
-  eid('authFooterLink').textContent = isLogin ? 'Sign up free' : 'Sign in';
+  const track = eid('authTrack');
+  const paneLogin = eid('paneLogin');
+  const paneSignup = eid('paneSignup');
+  const tabLogin = eid('tabLogin');
+  const tabSignup = eid('tabSignup');
+  const btnText = eid('authBtnText');
+  const heading = eid('authHeading');
+
+  if (mode === 'login') {
+    tabLogin.classList.add('active');
+    tabSignup.classList.remove('active');
+    if (track) track.style.transform = 'translateX(0%)';
+    if (paneLogin) paneLogin.classList.remove('inactive');
+    if (paneSignup) paneSignup.classList.add('inactive');
+    if (btnText) btnText.textContent = 'Sign In';
+    if (heading) heading.textContent = 'Welcome back';
+    eid('authFooterText').textContent = "Don't have an account?";
+    eid('authFooterLink').textContent = "Sign up free";
+  } else {
+    tabLogin.classList.remove('active');
+    tabSignup.classList.add('active');
+    if (track) track.style.transform = 'translateX(-50%)';
+    if (paneLogin) paneLogin.classList.add('inactive');
+    if (paneSignup) paneSignup.classList.remove('inactive');
+    if (btnText) btnText.textContent = 'Create Account';
+    if (heading) heading.textContent = 'Join FusionPDF';
+    eid('authFooterText').textContent = "Already have an account?";
+    eid('authFooterLink').textContent = "Sign in";
+  }
   eid('authErr').style.display = 'none';
 }
 
-function toggleAuthMode(e) { e.preventDefault(); setAuthMode(authMode === 'login' ? 'signup' : 'login'); }
-
-function togglePassVis() {
-  const inp = eid('authPass');
-  const btn = inp.nextElementSibling;
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; btn.textContent = '👁'; }
+function toggleAuthMode(e) {
+  if (e) e.preventDefault();
+  setAuthMode(authMode === 'login' ? 'signup' : 'login');
 }
 
-function showAuthError(msg) { const el = eid('authErr'); el.textContent = msg; el.style.display = 'block'; }
+function showAuthError(msg) { 
+  const el = eid('authErr'); 
+  el.textContent = msg; 
+  el.style.display = 'block'; 
+}
 
 // ════════════════════════════════════════
 // SUPABASE INIT
@@ -8658,73 +8793,85 @@ function saveSession(u) { localStorage.setItem('fusionpdf_session', JSON.stringi
 
 // ── Auth entry point ───────────────────────────────────────────────────
 async function doAuth() {
-  const email = eid('authEmail').value.trim();
-  const pass  = eid('authPass').value;
-  const name  = eid('authName').value.trim();
-  eid('authErr').style.display = 'none';
+  const errEl = eid('authErr');
+  const btn = eid('authSubmitBtn');
+  const spinner = eid('authBtnSpinner');
+  const btnText = eid('authBtnText');
+  
+  // 1. Get values based on mode
+  let email, pass, name = '';
+  if (authMode === 'login') {
+    email = eid('authEmail').value.trim();
+    pass  = eid('authPass').value;
+  } else {
+    name  = eid('authName') ? eid('authName').value.trim() : '';
+    email = eid('authEmailSignup').value.trim();
+    pass  = eid('authPassSignup').value;
 
+    if (!name) { showAuthError('Please enter your full name.'); return; }
+  }
+
+  // 2. Validate
   if (!email || !pass) { showAuthError('Please fill in all fields.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Please enter a valid email address.'); return; }
   if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
 
-  const btn = eid('authSubmitBtn');
-  btn.disabled = true;
-  btn.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  // 3. Start Loading
+  errEl.style.display = 'none';
+  btn.classList.add('btn-loading');
+  spinner.className = 'fp-spinner';
+  const originalText = btnText.textContent;
+  btnText.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…';
 
   try {
     if (authMode === 'signup') {
-      if (!name) { showAuthError('Please enter your full name.'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
-      const { data, error } = await _supa.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-      if (error) { showAuthError(error.message); btn.disabled = false; btn.textContent = 'Create Account'; return; }
+      const { data, error } = await _supa.auth.signUp({ 
+        email, 
+        password: pass, 
+        options: { data: { full_name: name } } 
+      });
       
-      // Upsert profile row (optional)
+      if (error) throw error;
+      
       if (data.user) {
-        try {
-          await _supa.from('profiles').upsert({ id: data.user.id, email, full_name: name, updated_at: new Date().toISOString() });
-        } catch(e) { console.debug('Profile upsert ignored:', e); }
-        
-        const user = { id: data.user.id, name, email, avatar: name.charAt(0).toUpperCase(), joined: data.user.created_at };
-        saveSession(user); 
-        closeAuth(); 
-        loginUser(user);
-        successToast('🎉 Welcome, ' + name + '! Account created.');
+        successToast('Account created! Welcome, ' + (name || email));
+        const sessionUser = { id: data.user.id, name: name || email, email, avatar: (name || email).charAt(0).toUpperCase(), joined: data.user.created_at };
+        localStorage.setItem('fusionpdf_session', JSON.stringify(sessionUser));
+        loginUser(sessionUser);
+        closeAuth();
       } else {
-        showAuthError('Check your email to confirm your account, then sign in.');
+        showAuthError('Check your email to confirm your account.');
       }
     } else {
       const { data, error } = await _supa.auth.signInWithPassword({ email, password: pass });
-      if (error) { showAuthError(error.message || 'Incorrect email or password.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+      if (error) throw error;
       
-      const meta = data.user?.user_metadata || {};
-      const displayName = meta.full_name || email.split('@')[0];
-      
-      // Fetch extended profile safely
-      let prof = null;
-      try {
-        const { data: p, error: pe } = await _supa.from('profiles').select('*').eq('id', data.user.id).single();
-        if (!pe) prof = p;
-      } catch (e) { console.debug('Profile fetch ignored:', e); }
+      if (data.user) {
+        let profileName = '';
+        try {
+          const { data: prof } = await _supa.from('profiles').select('full_name, avatar_url').eq('id', data.user.id).single();
+          if (prof?.full_name) profileName = prof.full_name;
+        } catch(pe) { console.debug("Profile fetch skipped", pe); }
 
-      const user = {
-        id:     data.user.id,
-        name:   (prof?.full_name) || displayName,
-        email:  data.user.email,
-        avatar: ((prof?.full_name) || displayName).charAt(0).toUpperCase(),
-        joined: data.user.created_at,
-        avatarUrl: prof?.avatar_url || null,
-      };
-      
-      saveSession(user);
-      closeAuth();
-      loginUser(user);
-      successToast('Welcome back, ' + user.name + '! ✓');
+        const sessionUser = { 
+          id: data.user.id, 
+          name: profileName || data.user.email.split('@')[0], 
+          email: data.user.email,
+          avatar: (profileName || data.user.email).charAt(0).toUpperCase()
+        };
+        localStorage.setItem('fusionpdf_session', JSON.stringify(sessionUser));
+        loginUser(sessionUser);
+        successToast('Signed in successfully');
+        closeAuth();
+      }
     }
-  } catch(e) {
-    console.error('Login error:', e);
-    showAuthError(`Network error or configuration issue: ${e.message || 'Please check your connection.'}`);
+  } catch (e) {
+    console.error('Auth error:', e);
+    showAuthError(e.message || 'An unexpected error occurred. Please try again.');
+  } finally {
+    btn.classList.remove('btn-loading');
+    spinner.className = '';
+    btnText.textContent = originalText;
   }
-  btn.disabled = false;
-  btn.textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
 }
 
 function googleAuth() {
